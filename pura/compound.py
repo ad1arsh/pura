@@ -25,6 +25,25 @@ class Texture(BaseModel):
     details: Optional[str] = None
 
 
+class TextureType(str, Enum):
+    UNSPECIFIED = "UNSPECIFIED"
+    CUSTOM = "CUSTOM"
+    POWDER = "POWDER"
+    CRYSTAL = "CRYSTAL"
+    OIL = "OIL"
+    AMORPHOUS_SOLID = "AMORPHOUS_SOLID"
+    FOAM = "FOAM"
+    WAX = "WAX"
+    SEMI_SOLID = "SEMI_SOLID"
+    SOLID = "SOLID"
+    LIQUID = "LIQUID"
+
+
+class Texture(BaseModel):
+    texture_type: TextureType
+    details: Optional[str] = None
+
+
 class CompoundIdentifierType(str, Enum):
     UNSPECIFIED = "UNSPECIFIED"
     CUSTOM = "CUSTOM"

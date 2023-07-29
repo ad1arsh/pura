@@ -175,7 +175,7 @@ class ReactionConditions(PintModel):
     """The pH of the reaction"""
 
 
-class Reaction(PintModel,extra=Extra.allow):
+class Reaction(PintModel):
     """A reaction is specified by inputs, conditions and outcomes."""
 
     inputs: List[ReactionInput]

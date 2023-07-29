@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "pura"
-version = "0.2.3"
+version = "0.2.4"
 description = "Clean chemical data quickly"
 authors = ["Kobi Felton <kobi.c.f@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-Pint = ">=0.19.2"
+python = ">=3.8,<3.9.7 || >3.9.7,<3.11"
+Pint = "^0.20"
 pydantic = "^1.9.1"
 tqdm = "^4.64.0"
 aiohttp = "^3.8.1"
@@ -21,6 +21,8 @@ pandas = "^1.4.3"
 nest-asyncio = "^1.5.6"
 streamlit = "^1.16.0"
 stqdm = "^0.0.4"
+databases = { version = "^0.7.0", extras = ["aiosqlite"] }
+importlib-resources = "^5.12.0"
 
 [tool.poetry.extras]
 stout = ["unicodedata2", "pystow", "tensorflow-gpu"]
