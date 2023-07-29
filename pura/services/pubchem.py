@@ -34,13 +34,14 @@ API_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
 AUTOCOMPLETE_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete"
 
 INPUT_IDENTIFIER_MAP = {
-    CompoundIdentifierType.SMILES: "CanonicalSMILES",
+    CompoundIdentifierType.SMILES: "smiles",  # changed to smiles from CanonicalSMILES
     # CompoundIdentifierType.MOLBLOCK: "mol",
     CompoundIdentifierType.INCHI: "InChI",
     CompoundIdentifierType.IUPAC_NAME: "IUPACName",
     CompoundIdentifierType.INCHI_KEY: "InChIKey",
     # CompoundIdentifierType.XYZ: "xyz",
     CompoundIdentifierType.NAME: "name",
+    CompoundIdentifierType.PUBCHEM_CID: "cid",
 }
 
 OUTPUT_IDENTIFIER_MAP = {
@@ -48,8 +49,11 @@ OUTPUT_IDENTIFIER_MAP = {
     CompoundIdentifierType.INCHI: "InChI",
     CompoundIdentifierType.IUPAC_NAME: "IUPACName",
     CompoundIdentifierType.INCHI_KEY: "InChIKey",
+    CompoundIdentifierType.TITLE: "Title",  # Added title
+    CompoundIdentifierType.PUBCHEM_CID: "CID",
+    CompoundIdentifierType.ISOMERIC_SMILES: "IsomericSMILES",
 }
-
+PROPERTY_EXCEPTIONS = [OUTPUT_IDENTIFIER_MAP.get(CompoundIdentifierType.PUBCHEM_CID)]
 # Allows properties to optionally be specified as underscore_separated, consistent with Compound attributes
 PROPERTY_MAP = {
     "molecular_formula": "MolecularFormula",
@@ -122,9 +126,10 @@ class PubChem(Service):
         output_identifier_types: List[CompoundIdentifierType],
     ) -> List[Union[CompoundIdentifierType, None]]:
         namespace = INPUT_IDENTIFIER_MAP.get(input_identifier.identifier_type)
+        # print(namespace)
         if namespace is None:
             raise ValueError(
-                f"{input_identifier.identifier_type} is not one of the valid identifier types for Pubchem."
+                f"{input_identifier.identifier_type} is not one of the valid identifier types for PubChem."
             )
         representations = [
             OUTPUT_IDENTIFIER_MAP.get(output_identifier_type)
@@ -135,8 +140,16 @@ class PubChem(Service):
             representations.remove(None)
         if not any(representations):
             raise ValueError(
-                f"{output_identifier_types} contains invalid identifier types for PbuChme."
+                f"{output_identifier_types} contains invalid identifier types for PubChem."
             )
+        if PROPERTY_EXCEPTIONS:
+            properties = [
+                representation
+                for representation in representations
+                if representation not in PROPERTY_EXCEPTIONS
+            ]
+        else:
+            properties = representations
 
         # Search
         input_identifiers_queue = Queue()
@@ -146,7 +159,7 @@ class PubChem(Service):
             input_value = input_identifiers_queue.get()
             results = await get_properties(
                 session,
-                properties=representations,
+                properties=properties,
                 identifier=input_value,
                 namespace=namespace,
                 searchtype=None,
@@ -198,7 +211,8 @@ async def get_properties(
         properties = properties.split(",")
     properties = ",".join([PROPERTY_MAP.get(p, p) for p in properties])
     properties = "property/%s" % properties
-
+    # properties += ",Title"
+    # print(properties)
     try:
         results = await request(
             session=session,
@@ -213,7 +227,7 @@ async def get_properties(
         )
     except HTTPNotFound:
         return []
-
+    print(results)
     if results is not None:
         logger.debug(results)
         return results["PropertyTable"]["Properties"]
@@ -295,7 +309,8 @@ async def request(
     apiurl = "/".join(comps)
     if kwargs:
         apiurl += "?%s" % urlencode(kwargs)
-
+    # print(apiurl)
+    # print(postdata)
     # Make request
     logger.debug("Request URL: %s", apiurl)
     logger.debug("Request data: %s", postdata)
