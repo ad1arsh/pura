@@ -63,6 +63,7 @@ class CAS(Service):
                 value=result,
             )
             for output_representation, result in results.items()
+            if result is not None
         ]
 
 
