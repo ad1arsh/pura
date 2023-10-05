@@ -173,7 +173,7 @@ class PubChem(Service):
                                 identifier_type=inverse_map(OUTPUT_IDENTIFIER_MAP)[
                                     representation
                                 ],
-                                value=result[representation],
+                                value=str(result[representation]),
                             )
                         ]
 
