@@ -1,5 +1,7 @@
 import pint
-from pydantic import BaseModel
+from pydantic import BaseModel,GetJsonSchemaHandler
+from pydantic_core import CoreSchema
+from typing import Any, Dict
 
 ureg = pint.UnitRegistry()
 
@@ -24,17 +26,25 @@ def quantity(dimensionality: str) -> type:
                 f"Dimensionality must be {cls.dimensionality}. Currently {quantity.dimensionality}."
             )
         return quantity
-
+    
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update({"$ref": f"#/definitions/Quantity{dimensionality}"})
+    def __get_pydantic_json_schema__(
+        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> Dict[str, Any]:
+        json_schema = super(pint.Quantity, cls).__get_pydantic_json_schema__(core_schema, handler)
+        json_schema = handler.resolve_ref_schema(json_schema)
+        json_schema.update({"$ref": f"#/definitions/Quantity{dimensionality}"})
+        return json_schema
+    # @classmethod
+    # def __modify_schema__(cls, field_schema):
+    #     field_schema.update({"$ref": f"#/definitions/Quantity{dimensionality}"})
 
     return type(
         "Quantity",
         (pint.Quantity,),
         dict(
             __get_validators__=__get_validators__,
-            __modify_schema__=__modify_schema__,
+            __get_pydantic_json_schema__=__get_pydantic_json_schema__,
             dimensionality=dimensionality,
             validate=validate,
         ),
